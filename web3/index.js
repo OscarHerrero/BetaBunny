@@ -203,7 +203,7 @@ const gasLimit = "222222" // gas limit
 const gasPrice = "333333333333"
 window.web3gl.sendContract(method, abi, contract, args, value, gasLimit, gasPrice)
 */
-async function sendContract(method, abi, contract, args, value, gasLimit, gasPrice) {
+/*async function sendContract(method, abi, contract, args, value, gasLimit, gasPrice) {
   const from = (await web3.eth.getAccounts())[0];
   new web3.eth.Contract(JSON.parse(abi), contract).methods[method](...JSON.parse(args))
       .send({
@@ -216,6 +216,39 @@ async function sendContract(method, abi, contract, args, value, gasLimit, gasPri
         window.web3gl.sendContractResponse = transactionHash;
       })
       .on("error", (error) => {
+        window.web3gl.sendContractResponse = error.message;
+      });
+}*/
+async function sendContract(method, abi, contract, args, value, gasLimit, gasPrice) {
+  
+  console.log("SendContractYuri");
+  
+  const from = (await web3.eth.getAccounts())[0];
+  const c = new web3.eth.Contract(JSON.parse(abi), contract)
+  
+  try {
+      const gasAmount = await c.methods[method](...JSON.parse(args)).estimateGas({
+          from: from,
+          value: value,
+          gas: gasLimit ? gasLimit : undefined,
+      })
+  }
+  catch (error) {
+      window.web3gl.sendContractResponse = error.message;
+      return;
+      }
+  c.methods[method](...JSON.parse(args))
+      .send({
+        from,
+        value,
+        gas: gasLimit ? gasLimit : undefined,
+        gasPrice: gasPrice ? gasPrice : undefined,
+      })
+      .on("transactionHash", (transactionHash) => {
+        window.web3gl.sendContractResponse = transactionHash;
+      })
+      .on("error", (error) => {
+        console.log( error)
         window.web3gl.sendContractResponse = error.message;
       });
 }
